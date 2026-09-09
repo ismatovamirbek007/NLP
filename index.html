@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Android Quiz — 50 вопросов</title>
+<style>
+  :root {
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #1f2937;
+    --muted: #6b7280;
+    --accent: #4f46e5;
+    --green: #16a34a;
+    --green-bg: #dcfce7;
+    --red: #dc2626;
+    --red-bg: #fee2e2;
+    --border: #e5e7eb;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 24px 12px 80px;
+  }
+  h1 {
+    text-align: center;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+  #quiz-container {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  }
+  .question-title {
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 16px;
+  }
+  .qnum {
+    color: var(--accent);
+    margin-right: 6px;
+  }
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .option:hover {
+    background: #f0f1fe;
+  }
+  .option input {
+    accent-color: var(--accent);
+  }
+  .option.correct {
+    background: var(--green-bg);
+    border-color: var(--green);
+    color: var(--green);
+    font-weight: 600;
+  }
+  .option.incorrect {
+    background: var(--red-bg);
+    border-color: var(--red);
+    color: var(--red);
+    font-weight: 600;
+  }
+  .option.disabled {
+    cursor: default;
+    pointer-events: none;
+  }
+  #submit-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 14px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    align-items: center;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.06);
+  }
+  button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 12px 26px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button:hover { opacity: 0.9; }
+  button:disabled {
+    background: #a5a6f0;
+    cursor: not-allowed;
+  }
+  #restart-btn {
+    background: transparent;
+    color: var(--accent);
+    border: 2px solid var(--accent);
+  }
+  #restart-btn:hover {
+    background: #f0f1fe;
+  }
+  #progress {
+    color: var(--muted);
+    font-size: 14px;
+  }
+  #result-box {
+    max-width: 760px;
+    margin: 0 auto 24px;
+    background: var(--card);
+    border: 2px solid var(--accent);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    display: none;
+  }
+  #result-box.show { display: block; }
+  #result-score {
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 8px 0;
+  }
+  #result-message {
+    color: var(--muted);
+    font-size: 15px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Android Quiz</h1>
+<p class="subtitle">50 вопросов — выберите ответ, правильный подсветится зелёным, неправильный — красным</p>
+
+<div id="result-box">
+  <div>Ваш результат</div>
+  <div id="result-score">0 / 50</div>
+  <div id="result-message"></div>
+</div>
+
+<div id="quiz-container"></div>
+
+<div id="submit-bar">
+  <span id="progress">Отвечено: 0 / 50</span>
+  <button id="submit-btn" disabled>Показать итог</button>
+  <button id="restart-btn">Начать заново</button>
+</div>
+
+<script>
+const questions = [
+  {q:"What is the front-end of an Android application?", options:{A:"Database",B:"User Interface",C:"Server",D:"API"}, answer:"B"},
+  {q:"What is the main purpose of Android UI testing?", options:{A:"Database backup",B:"Network monitoring",C:"Testing the user interface",D:"File compression"}, answer:"C"},
+  {q:"Which testing method involves human interaction?", options:{A:"Automated Testing",B:"Manual Testing",C:"Unit Testing",D:"Integration Testing"}, answer:"B"},
+  {q:"Which testing type uses tools/scripts?", options:{A:"Manual Testing",B:"Automated Testing",C:"Black Box Testing",D:"White Box Testing"}, answer:"B"},
+  {q:"A clean UI mainly improves:", options:{A:"Hardware speed",B:"User experience",C:"Battery usage",D:"Storage"}, answer:"B"},
+  {q:"UI testing helps in:", options:{A:"Reducing RAM",B:"Detecting failures early",C:"Increasing file size",D:"Removing databases"}, answer:"B"},
+  {q:"Which of the following is a benefit of UI testing?", options:{A:"Poor navigation",B:"Stable application release",C:"Slow performance",D:"Hardcoding values"}, answer:"B"},
+  {q:"Which component stores text content in Android?", options:{A:"Layout",B:"Theme",C:"String Resource",D:"Animation"}, answer:"C"},
+  {q:"Images and icons are examples of:", options:{A:"Activities",B:"Resources",C:"Services",D:"Threads"}, answer:"B"},
+  {q:"Application resources are stored separately to improve:", options:{A:"Reusability",B:"Complexity",C:"Hardcoding",D:"Errors"}, answer:"A"},
+  {q:"Which of the following is NOT an application resource?", options:{A:"Strings",B:"Layouts",C:"Colors",D:"CPU"}, answer:"D"},
+  {q:"What does UI stand for?", options:{A:"User Integration",B:"User Interface",C:"Universal Interface",D:"Unified Internet"}, answer:"B"},
+  {q:"Which testing ensures smooth user experience?", options:{A:"UI Testing",B:"Hardware Testing",C:"Compiler Testing",D:"Memory Testing"}, answer:"A"},
+  {q:"Which resource defines the UI design?", options:{A:"Strings",B:"Layouts",C:"Colors",D:"Dimensions"}, answer:"B"},
+  {q:"Hardcoding resources is generally:", options:{A:"Recommended",B:"Avoided",C:"Mandatory",D:"Faster"}, answer:"B"},
+  {q:"Themes in Android are used for:", options:{A:"Network access",B:"Styling appearance",C:"Database design",D:"File storage"}, answer:"B"},
+  {q:"Which testing type is faster for repeated tasks?", options:{A:"Manual Testing",B:"Automated Testing",C:"Paper Testing",D:"Visual Testing"}, answer:"B"},
+  {q:"Android UI testing helps developers:", options:{A:"Increase bugs",B:"Understand the application deeply",C:"Reduce coding",D:"Remove layouts"}, answer:"B"},
+  {q:"Colors and styles are stored as:", options:{A:"Hardware",B:"Resources",C:"APIs",D:"Activities"}, answer:"B"},
+  {q:"Which is an externalized component?", options:{A:"CPU Register",B:"Layout",C:"Processor",D:"Cache"}, answer:"B"},
+  {q:"What is the purpose of storing resources separately?", options:{A:"To increase errors",B:"To improve maintenance",C:"To slow the app",D:"To reduce storage"}, answer:"B"},
+  {q:"Dimensions and animations are examples of:", options:{A:"Resources",B:"Databases",C:"Threads",D:"Activities"}, answer:"A"},
+  {q:"Which testing type reduces human effort?", options:{A:"Manual Testing",B:"Automated Testing",C:"UI Design",D:"Alpha Testing"}, answer:"B"},
+  {q:"User-friendly UI mainly helps:", options:{A:"Developers only",B:"End users",C:"Servers",D:"Networks"}, answer:"B"},
+  {q:"Early detection of malfunction is possible through:", options:{A:"UI Testing",B:"Formatting",C:"Installation",D:"Animation"}, answer:"A"},
+  {q:"What does API stand for?", options:{A:"Application Program Interface",B:"Android Programming Interface",C:"Application Process Integration",D:"Android Process Interface"}, answer:"A"},
+  {q:"Which database is commonly used in Android?", options:{A:"Oracle",B:"MySQL",C:"SQLite",D:"MongoDB"}, answer:"C"},
+  {q:"SQLite is a ______ database.", options:{A:"Distributed",B:"Lightweight",C:"Cloud-based",D:"Network"}, answer:"B"},
+  {q:"Which Android component is used for data sharing?", options:{A:"Activity",B:"Broadcast Receiver",C:"Content Provider",D:"Fragment"}, answer:"C"},
+  {q:"Which language is commonly used to access Android APIs?", options:{A:"Python",B:"Java",C:"PHP",D:"Swift"}, answer:"B"},
+  {q:"Which folder stores drawable resources?", options:{A:"values",B:"layout",C:"drawable",D:"menu"}, answer:"C"},
+  {q:"Which protocol is commonly used in Web APIs?", options:{A:"FTP",B:"SMTP",C:"HTTP",D:"SNMP"}, answer:"C"},
+  {q:"JSON stands for:", options:{A:"Java Source Object Notation",B:"JavaScript Object Notation",C:"Java Standard Object Naming",D:"Java Structured Object Notation"}, answer:"B"},
+  {q:"Which method is commonly used to retrieve data from a Web API?", options:{A:"PUSH",B:"GET",C:"MOVE",D:"DELETE"}, answer:"B"},
+  {q:"Which Android API is used for internet communication?", options:{A:"Graphics API",B:"Networking API",C:"Camera API",D:"Media API"}, answer:"B"},
+  {q:"APK stands for:", options:{A:"Android Phone Kit",B:"Android Package Kit",C:"Application Package Kit",D:"Android Program Kernel"}, answer:"B"},
+  {q:"Which component helps in secure data sharing between applications?", options:{A:"Service",B:"Activity",C:"Content Provider",D:"Intent"}, answer:"C"},
+  {q:"Which storage method is best for structured data in Android?", options:{A:"Shared Preferences",B:"SQLite",C:"Internal Storage",D:"External Storage"}, answer:"B"},
+  {q:"Which class is commonly used for network connections in Android?", options:{A:"HttpURLConnection",B:"DataManager",C:"SocketViewer",D:"NetHandler"}, answer:"A"},
+  {q:"Telephony APIs are mainly used for:", options:{A:"Graphics",B:"Database Management",C:"Communication Features",D:"File Compression"}, answer:"C"},
+  {q:"Which of the following is a Web API data format?", options:{A:"JPEG",B:"XML",C:"MP3",D:"DOCX"}, answer:"B"},
+  {q:"Android applications are distributed as:", options:{A:"EXE files",B:"APK files",C:"ZIP files",D:"BIN files"}, answer:"B"},
+  {q:"Which storage option is private to an application?", options:{A:"External Storage",B:"Cloud Storage",C:"Internal Storage",D:"Shared Storage"}, answer:"C"},
+  {q:"Which API is used for sending SMS in Android?", options:{A:"SQLite API",B:"Media API",C:"Telephony API",D:"Camera API"}, answer:"C"},
+  {q:"Which of the following is NOT an Android component?", options:{A:"Activity",B:"Service",C:"Compiler",D:"Broadcast Receiver"}, answer:"C"},
+  {q:"Which Android feature supports offline data storage?", options:{A:"SQLite",B:"Bluetooth",C:"Wi-Fi",D:"GPS"}, answer:"A"},
+  {q:"Which file contains app permissions in Android?", options:{A:"strings.xml",B:"AndroidManifest.xml",C:"layout.xml",D:"colors.xml"}, answer:"B"},
+  {q:"Which of the following is used for app deployment?", options:{A:"APK",B:"JSON",C:"XML",D:"HTML"}, answer:"A"},
+  {q:"Which Android API helps applications communicate with servers?", options:{A:"Media API",B:"Networking API",C:"Sensor API",D:"Graphics API"}, answer:"B"},
+  {q:"Content Providers use ______ to identify data.", options:{A:"URLs",B:"URIs",C:"HTML",D:"JSON"}, answer:"B"}
+];
+
+const userAnswers = new Array(questions.length).fill(null);
+const container = document.getElementById('quiz-container');
+const progressEl = document.getElementById('progress');
+const submitBtn = document.getElementById('submit-btn');
+const resultBox = document.getElementById('result-box');
+const resultScore = document.getElementById('result-score');
+const resultMessage = document.getElementById('result-message');
+
+function updateProgress() {
+  const answeredCount = userAnswers.filter(a => a !== null).length;
+  progressEl.textContent = `Отвечено: ${answeredCount} / ${questions.length}`;
+  submitBtn.disabled = answeredCount !== questions.length;
+}
+
+function render() {
+  questions.forEach((item, idx) => {
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = `card-${idx}`;
+
+    const title = document.createElement('div');
+    title.className = 'question-title';
+    title.innerHTML = `<span class="qnum">${idx + 1}.</span>${item.q}`;
+    card.appendChild(title);
+
+    const optionsDiv = document.createElement('div');
+    optionsDiv.className = 'options';
+
+    Object.keys(item.options).forEach(letter => {
+      const label = document.createElement('label');
+      label.className = 'option';
+      label.id = `opt-${idx}-${letter}`;
+
+      const input = document.createElement('input');
+      input.type = 'radio';
+      input.name = `q${idx}`;
+      input.value = letter;
+      input.addEventListener('change', () => {
+        userAnswers[idx] = letter;
+        revealAnswer(idx, letter);
+        updateProgress();
+      });
+
+      const span = document.createElement('span');
+      span.textContent = `${letter}) ${item.options[letter]}`;
+
+      label.appendChild(input);
+      label.appendChild(span);
+      optionsDiv.appendChild(label);
+    });
+
+    card.appendChild(optionsDiv);
+    container.appendChild(card);
+  });
+}
+
+function checkAnswers() {
+  let score = 0;
+  questions.forEach((item, idx) => {
+    const chosen = userAnswers[idx];
+    const correctLetter = item.answer;
+
+    Object.keys(item.options).forEach(letter => {
+      const optEl = document.getElementById(`opt-${idx}-${letter}`);
+      optEl.classList.add('disabled');
+      const input = optEl.querySelector('input');
+      input.disabled = true;
+
+      if (letter === correctLetter) {
+        optEl.classList.add('correct');
+      } else if (letter === chosen && chosen !== correctLetter) {
+        optEl.classList.add('incorrect');
+      }
+    });
+
+    if (chosen === correctLetter) score++;
+  });
+
+  resultScore.textContent = `${score} / ${questions.length}`;
+  const pct = Math.round((score / questions.length) * 100);
+  let msg = '';
+  if (pct === 100) msg = 'Отлично! Все ответы верные!';
+  else if (pct >= 80) msg = 'Очень хороший результат!';
+  else if (pct >= 50) msg = 'Неплохо, но есть куда расти.';
+  else msg = 'Стоит повторить материал.';
+  resultMessage.textContent = `${pct}% правильных ответов. ${msg}`;
+
+  resultBox.classList.add('show');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Тест завершён';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+submitBtn.addEventListener('click', checkAnswers);
+
+render();
+updateProgress();
+</script>
+
+</body>
+</html>

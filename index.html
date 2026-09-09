@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Android Application Test</title>
+<style>
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f4f6;
+    color: #222;
+}
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px 50px;
+}
+h1 { text-align: center; margin-bottom: 8px; }
+.subtitle { text-align: center; color: #666; margin-bottom: 25px; }
+.question {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+.question h3 { margin-top: 0; line-height: 1.4; }
+.option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 13px 15px;
+    margin: 9px 0;
+    border: 2px solid #ddd;
+    border-radius: 9px;
+    background: white;
+    cursor: pointer;
+    font-size: 16px;
+    transition: .2s;
+}
+.option:hover:not(:disabled) { background: #f5f5f5; }
+.option.correct {
+    background: #d4edda;
+    border-color: #28a745;
+    color: #155724;
+}
+.option.wrong {
+    background: #f8d7da;
+    border-color: #dc3545;
+    color: #721c24;
+}
+.option:disabled { cursor: default; }
+.feedback {
+    margin-top: 10px;
+    font-weight: bold;
+    min-height: 22px;
+}
+.feedback.correct { color: #198754; }
+.feedback.wrong { color: #dc3545; }
+
+#result {
+    display: none;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    margin-top: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+#score { font-size: 28px; font-weight: bold; margin: 10px 0; }
+.restart {
+    border: none;
+    background: #0d6efd;
+    color: white;
+    padding: 13px 25px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+.restart:hover { background: #0b5ed7; }
+.progress {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: #f3f4f6;
+    padding: 10px 0;
+}
+.progress-bar {
+    height: 10px;
+    background: #ddd;
+    border-radius: 10px;
+    overflow: hidden;
+}
+#progressFill {
+    height: 100%;
+    width: 0;
+    background: #198754;
+    transition: width .3s;
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>Android Application Test</h1>
+    <div class="subtitle">50 Questions</div>
+
+    <div class="progress">
+        <div class="progress-bar"><div id="progressFill"></div></div>
+    </div>
+
+    <div id="quiz"></div>
+
+    <div id="result">
+        <h2>Test Completed!</h2>
+        <div id="score"></div>
+        <p id="message"></p>
+        <button class="restart" onclick="restartQuiz()">Start Again</button>
+    </div>
+</div>
+
+<script>
+const questions = [
+{q:"What is the front-end of an Android application?",o:["Database","User Interface","Server","API"],a:1},
+{q:"What is the main purpose of Android UI testing?",o:["Database backup","Network monitoring","Testing the user interface","File compression"],a:2},
+{q:"Which testing method involves human interaction?",o:["Automated Testing","Manual Testing","Unit Testing","Integration Testing"],a:1},
+{q:"Which testing type uses tools/scripts?",o:["Manual Testing","Automated Testing","Black Box Testing","White Box Testing"],a:1},
+{q:"A clean UI mainly improves:",o:["Hardware speed","User experience","Battery usage","Storage"],a:1},
+{q:"UI testing helps in:",o:["Reducing RAM","Detecting failures early","Increasing file size","Removing databases"],a:1},
+{q:"Which of the following is a benefit of UI testing?",o:["Poor navigation","Stable application release","Slow performance","Hardcoding values"],a:1},
+{q:"Which component stores text content in Android?",o:["Layout","Theme","String Resource","Animation"],a:2},
+{q:"Images and icons are examples of:",o:["Activities","Resources","Services","Threads"],a:1},
+{q:"Application resources are stored separately to improve:",o:["Reusability","Complexity","Hardcoding","Errors"],a:0},
+{q:"Which of the following is NOT an application resource?",o:["Strings","Layouts","Colors","CPU"],a:3},
+{q:"What does UI stand for?",o:["User Integration","User Interface","Universal Interface","Unified Internet"],a:1},
+{q:"Which testing ensures smooth user experience?",o:["UI Testing","Hardware Testing","Compiler Testing","Memory Testing"],a:0},
+{q:"Which resource defines the UI design?",o:["Strings","Layouts","Colors","Dimensions"],a:1},
+{q:"Hardcoding resources is generally:",o:["Recommended","Avoided","Mandatory","Faster"],a:1},
+{q:"Themes in Android are used for:",o:["Network access","Styling appearance","Database design","File storage"],a:1},
+{q:"Which testing type is faster for repeated tasks?",o:["Manual Testing","Automated Testing","Paper Testing","Visual Testing"],a:1},
+{q:"Android UI testing helps developers:",o:["Increase bugs","Understand the application deeply","Reduce coding","Remove layouts"],a:1},
+{q:"Colors and styles are stored as:",o:["Hardware","Resources","APIs","Activities"],a:1},
+{q:"Which is an externalized component?",o:["CPU Register","Layout","Processor","Cache"],a:1},
+{q:"What is the purpose of storing resources separately?",o:["To increase errors","To improve maintenance","To slow the app","To reduce storage"],a:1},
+{q:"Dimensions and animations are examples of:",o:["Resources","Databases","Threads","Activities"],a:0},
+{q:"Which testing type reduces human effort?",o:["Manual Testing","Automated Testing","UI Design","Alpha Testing"],a:1},
+{q:"User-friendly UI mainly helps:",o:["Developers only","End users","Servers","Networks"],a:1},
+{q:"Early detection of malfunction is possible through:",o:["UI Testing","Formatting","Installation","Animation"],a:0},
+
+{q:"What does API stand for?",o:["Application Program Interface","Android Programming Interface","Application Process Integration","Android Process Interface"],a:0},
+{q:"Which database is commonly used in Android?",o:["Oracle","MySQL","SQLite","MongoDB"],a:2},
+{q:"SQLite is a ______ database.",o:["Distributed","Lightweight","Cloud-based","Network"],a:1},
+{q:"Which Android component is used for data sharing?",o:["Activity","Broadcast Receiver","Content Provider","Fragment"],a:2},
+{q:"Which language is commonly used to access Android APIs?",o:["Python","Java","PHP","Swift"],a:1},
+{q:"Which folder stores drawable resources?",o:["values","layout","drawable","menu"],a:2},
+{q:"Which protocol is commonly used in Web APIs?",o:["FTP","SMTP","HTTP","SNMP"],a:2},
+{q:"JSON stands for:",o:["Java Source Object Notation","JavaScript Object Notation","Java Standard Object Naming","Java Structured Object Notation"],a:1},
+{q:"Which method is commonly used to retrieve data from a Web API?",o:["PUSH","GET","MOVE","DELETE"],a:1},
+{q:"Which Android API is used for internet communication?",o:["Graphics API","Networking API","Camera API","Media API"],a:1},
+{q:"APK stands for:",o:["Android Phone Kit","Android Package Kit","Application Package Kit","Android Program Kernel"],a:1},
+{q:"Which component helps in secure data sharing between applications?",o:["Service","Activity","Content Provider","Intent"],a:2},
+{q:"Which storage method is best for structured data in Android?",o:["Shared Preferences","SQLite","Internal Storage","External Storage"],a:1},
+{q:"Which class is commonly used for network connections in Android?",o:["HttpURLConnection","DataManager","SocketViewer","NetHandler"],a:0},
+{q:"Telephony APIs are mainly used for:",o:["Graphics","Database Management","Communication Features","File Compression"],a:2},
+{q:"Which of the following is a Web API data format?",o:["JPEG","XML","MP3","DOCX"],a:1},
+{q:"Android applications are distributed as:",o:["EXE files","APK files","ZIP files","BIN files"],a:1},
+{q:"Which storage option is private to an application?",o:["External Storage","Cloud Storage","Internal Storage","Shared Storage"],a:2},
+{q:"Which API is used for sending SMS in Android?",o:["SQLite API","Media API","Telephony API","Camera API"],a:2},
+{q:"Which of the following is NOT an Android component?",o:["Activity","Service","Compiler","Broadcast Receiver"],a:2},
+{q:"Which Android feature supports offline data storage?",o:["SQLite","Bluetooth","Wi-Fi","GPS"],a:0},
+{q:"Which file contains app permissions in Android?",o:["strings.xml","AndroidManifest.xml","layout.xml","colors.xml"],a:1},
+{q:"Which of the following is used for app deployment?",o:["APK","JSON","XML","HTML"],a:0},
+{q:"Which Android API helps applications communicate with servers?",o:["Media API","Networking API","Sensor API","Graphics API"],a:1},
+{q:"Content Providers use examples to identify data.",o:["URLs","URIs","HTML","JSON"],a:1}
+];
+
+let score = 0;
+let answered = 0;
+
+function loadQuiz() {
+    const quiz = document.getElementById("quiz");
+    quiz.innerHTML = "";
+    score = 0;
+    answered = 0;
+    document.getElementById("result").style.display = "none";
+    updateProgress();
+
+    questions.forEach((item, index) => {
+        const box = document.createElement("div");
+        box.className = "question";
+
+        const title = document.createElement("h3");
+        title.textContent = `${index + 1}. ${item.q}`;
+        box.appendChild(title);
+
+        const feedback = document.createElement("div");
+        feedback.className = "feedback";
+        feedback.id = `feedback-${index}`;
+
+        item.o.forEach((option, optionIndex) => {
+            const btn = document.createElement("button");
+            btn.className = "option";
+            btn.textContent = `${String.fromCharCode(65 + optionIndex)}) ${option}`;
+
+            btn.onclick = () => {
+                if (box.dataset.answered) return;
+                box.dataset.answered = "true";
+
+                const buttons = box.querySelectorAll(".option");
+                buttons.forEach(b => b.disabled = true);
+
+                if (optionIndex === item.a) {
+                    btn.classList.add("correct");
+                    feedback.textContent = "✓ Correct!";
+                    feedback.className = "feedback correct";
+                    score++;
+                } else {
+                    btn.classList.add("wrong");
+                    buttons[item.a].classList.add("correct");
+                    feedback.textContent = `✗ Wrong! Correct answer: ${String.fromCharCode(65 + item.a)}) ${item.o[item.a]}`;
+                    feedback.className = "feedback wrong";
+                }
+
+                answered++;
+                updateProgress();
+
+                if (answered === questions.length) {
+                    setTimeout(showResult, 400);
+                }
+            };
+
+            box.appendChild(btn);
+        });
+
+        box.appendChild(feedback);
+        quiz.appendChild(box);
+    });
+}
+
+function updateProgress() {
+    document.getElementById("progressFill").style.width =
+        `${(answered / questions.length) * 100}%`;
+}
+
+function showResult() {
+    const result = document.getElementById("result");
+    result.style.display = "block";
+    document.getElementById("score").textContent =
+        `Your Score: ${score} / ${questions.length}`;
+
+    let message;
+    const percent = (score / questions.length) * 100;
+    if (percent >= 90) message = "Excellent! 🎉";
+    else if (percent >= 70) message = "Very good! 👍";
+    else if (percent >= 50) message = "Good effort! Keep practicing.";
+    else message = "Keep studying and try again!";
+
+    document.getElementById("message").textContent = message;
+    result.scrollIntoView({behavior:"smooth"});
+}
+
+function restartQuiz() {
+    window.scrollTo({top: 0, behavior: "smooth"});
+    loadQuiz();
+}
+
+loadQuiz();
+</script>
+</body>
+</html>
